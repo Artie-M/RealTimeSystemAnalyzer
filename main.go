@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"text/tabwriter"
 )
 
 type Task struct {
@@ -125,23 +126,28 @@ func main() {
 		return
 	}
 
-	fmt.Println("Задача | Класс | C | D | T | L | Выполнимо | Тип дедлайна")
-	fmt.Println("--------------------------------------------------------------------------------")
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+
+	// Разделители колонок — символы '\t'
+	fmt.Fprintln(w, "Задача\tКласс\tC (мс)\tD (мс)\tT (мс)\tL (мс)\tВыполнимо\tТип дедлайна")
+	fmt.Fprintln(w, "------\t-----\t------\t------\t------\t------\t---------\t------------")
 
 	allFeasible := true
 	for _, t := range sys.Tasks {
 		s := slack(t)
 		f := is_feasible(t)
-		fStr := "да"
+		fStr := "Да"
 		if !f {
-			fStr = "нет"
+			fStr = "Нет"
 			allFeasible = false
 		}
 		dT := deadline_type(t)
 
-		fmt.Printf("%s | %s | %d | %d | %d | %d | %s | %s\n",
+		fmt.Fprintf(w, "%s\t%s\t%d\t%d\t%d\t%d\t%s\t%s\n",
 			t.Name, t.Hardness, t.C, t.D, t.T, s, fStr, dT)
 	}
+
+	w.Flush()
 
 	fmt.Println("\n--- ЗАКЛЮЧЕНИЕ ---")
 
