@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import (
 	"math"
@@ -78,6 +78,14 @@ func required_reaction_time(tasks []Task) int {
 		return 0
 	}
 	return minD
+}
+
+func utilization(tasks []Task) float64 {
+	u := 0.0
+	for _, t := range tasks {
+		u += float64(t.C) / float64(t.T)
+	}
+	return u
 }
 
 func classify_architecture(n_cpu int, has_network bool) string {
