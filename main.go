@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"math"
+	"os"
 )
 
 type Task struct {
@@ -106,4 +109,68 @@ func classify_architecture(n_cpu int, has_network bool) string {
 		return "многопроцессорная"
 	}
 	return "однопроцессорная"
+}
+
+func main() {
+	fileData, err := os.ReadFile("system.json")
+	if err != nil {
+		fmt.Println("Ошибка чтения файла:", err)
+		return
+	}
+
+	var sys SystemConfig
+	err = json.Unmarshal(fileData, &sys)
+	if err != nil {
+		fmt.Println("Ошибка парсинга JSON:", err)
+		return
+	}
+
+	fmt.Println("Задача | Класс | C | D | T | L | Выполнимо | Тип дедлайна")
+	fmt.Println("--------------------------------------------------------------------------------")
+
+	allFeasible := true
+	for _, t := range sys.Tasks {
+		s := slack(t)
+		f := is_feasible(t)
+		fStr := "да"
+		if !f {
+			fStr = "нет"
+			allFeasible = false
+		}
+		dT := deadline_type(t)
+
+		fmt.Printf("%s | %s | %d | %d | %d | %d | %s | %s\n",
+			t.Name, t.Hardness, t.C, t.D, t.T, s, fStr, dT)
+	}
+
+	fmt.Println("\n--- ЗАКЛЮЧЕНИЕ ---")
+
+	sysClass := classify_system(sys.Tasks)
+	fmt.Printf("Класс системы: %s\n", sysClass)
+
+	crit, hasCrit := critical_task(sys.Tasks)
+	if hasCrit {
+		fmt.Printf("Критическая задача: %s (L = %d мс)\n", crit.Name, slack(crit))
+	} else {
+		fmt.Println("Критическая задача: нет (отсутствуют жёсткие задачи)")
+	}
+
+	reqReaction := required_reaction_time(sys.Tasks)
+	fmt.Printf("Требуемое время реакции R_треб: %d мс\n", reqReaction)
+
+	util := utilization(sys.Tasks)
+	uCheck := "≤ 1 (выполняется)"
+	if util > 1 {
+		uCheck = "> 1 (не выполняется)"
+	}
+	fmt.Printf("Коэффициент загрузки U: %.2f %s\n", util, uCheck)
+
+	feasStr := "все дедлайны выполнимы"
+	if !allFeasible {
+		feasStr = "не все дедлайны выполнимы"
+	}
+	fmt.Printf("Общая выполнимость: %s\n", feasStr)
+
+	arch := classify_architecture(sys.NumCPU, sys.HasNetwork)
+	fmt.Printf("Архитектура: %s\n", arch)
 }
