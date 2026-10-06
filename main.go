@@ -26,6 +26,16 @@ func is_feasible(task Task) bool {
 	return slack(task) >= 0
 }
 
+func deadline_type(task Task) string {
+	if task.D == task.T {
+		return "неявный"
+	}
+	if task.D < task.T {
+		return "ограниченный"
+	}
+	return "произвольный"
+}
+
 func classify_system(tasks []Task) string {
 	for _, t := range tasks {
 		if t.Hardness == "жёсткое" {
