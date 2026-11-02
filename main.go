@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"encoding/json"
@@ -27,6 +27,9 @@ func slack(task Task) int {
 }
 
 func isFeasible(task Task) bool {
+	if task.C < 0 {
+		return false
+	}
 	return slack(task) >= 0
 }
 
